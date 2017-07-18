@@ -26,18 +26,58 @@ function getVuln()
 	}
 	else
 	{
-		return '
-		<div class="col-sm-4"></div>
-		
-		<div class="col-sm-4">
-			<div class="form-group">
-			<label for="rezultate">Rezultate:</label>
-			<textarea readonly style="resize: none;" class="form-control" rows="10" id="rezultate">'.$vuln.'</textarea>
-			</div>
+		?>
+
+		<div class="col-sm-12">
+		<p><b>Rezultate:</b></p>
 		</div>
 		
 		<div class="col-sm-4"></div>
-		';
+		
+		<div class="col-sm-4">
+			<table class="table table-bordered table-condensed table-responsive">
+			<tbody>
+			<tr>
+				<th>Type</th>
+				<th>Username</th>
+				<th>Password</th>
+				<th>Hostname</th>
+			</tr>
+			<?php
+			$filename = "/var/www/html/confidential/BSSH2/vuln.txt";
+			$pattern = "/(?P<type>.*) \-\> (?P<username>\w+) (?P<password>.+) (?P<ip>.{7,15}) (?P<port>\d{1,5})/";
+			
+			$file = fopen($filename, "r");
+			$raw = fread($file, filesize($filename));
+			$lines = explode("\n", $raw);
+			$scans = array();
+			
+			foreach ($lines as $line) {
+				$data = array();
+				preg_match($pattern, $line, $data);
+				array_push($scans, $data);
+			}
+			
+			foreach ($scans as $scan) {
+				if(end($scan) != NULL)
+				{
+				?>
+				<tr>
+					<td><?php if(empty($scan['type'])) { echo "Unknown"; } else { echo $scan['type']; } ?></td>
+					<td><?php echo $scan['username'];?></td>
+					<td><?php echo $scan['password'];?></td>
+					<td><?php echo $scan['ip'];?></td>
+				</tr>
+				<?php
+				}
+			}
+			?>
+			<tbody>
+			</table>
+		</div>
+		
+		<div class="col-sm-4"></div>
+		<?php
 	}
 }
 
@@ -70,7 +110,7 @@ function startScan()
 					}
 					else
 					{
-						shell_exec('cd confidential/BSSH2 && sudo ./scan_user '.$class.' > /dev/null 2>/dev/null &');
+						shell_exec('cd confidential/BSSH2 && sudo ./scan_user '.$class.' >/dev/null 2>&1 &');
 						return '
 						<div class="alert alert-success notificare">
 						Scanul va porni in cateva momente!
