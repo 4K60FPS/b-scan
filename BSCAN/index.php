@@ -139,7 +139,7 @@ if(isset($_POST['goToLogin']))
 		$u = htmlspecialchars(mysqli_real_escape_string($conn, $_POST['username']), ENT_QUOTES);
 		$p = htmlspecialchars(mysqli_real_escape_string($conn, $_POST['password']), ENT_QUOTES);
 		$phash = hash("sha256", $p);
-		$checklogin = 'SELECT id, username, password, register_time, last_login, request_scan FROM projaccounts WHERE username="'.$u.'" AND password="'.$phash.'"';
+		$checklogin = 'SELECT id, username, password FROM projaccounts WHERE username="'.$u.'" AND password="'.$phash.'"';
 		$updatelastlogin = 'UPDATE projaccounts SET last_login=CURRENT_DATE WHERE username="'.$u.'" AND password="'.$phash.'"';
 		$loggedin = $conn->query($updatelastlogin);
 		$checkin = $conn->query($checklogin);
@@ -181,7 +181,6 @@ if(isset($_POST['goToLogin']))
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<link href="https://fonts.googleapis.com/css?family=Ubuntu:300|Roboto" rel="stylesheet">
 		<!--EXTERNAL API-->
 	</head>
@@ -268,7 +267,7 @@ if(isset($_POST['goToLogin']))
 				else
 				{
 					//UPDATE RESULTS
-					$checklogin = 'SELECT id, username, password, register_time, last_login, request_scan, assigned_ip, assigned_port FROM projaccounts WHERE id="'.$_SESSION["id"].'"';
+					$checklogin = 'SELECT id, username, password, register_time, last_login, request_scan, assigned_ip, assigned_port, assigned_delay, assigned_class FROM projaccounts WHERE id="'.$_SESSION["id"].'"';
 					$checkin = $conn->query($checklogin);
 					if($checkin->num_rows > 0)
 					{
@@ -283,6 +282,8 @@ if(isset($_POST['goToLogin']))
 							$_SESSION["request_scan"] = $setdata["request_scan"];
 							$_SESSION["assigned_ip"] = $setdata["assigned_ip"];
 							$_SESSION["assigned_port"] = $setdata["assigned_port"];
+							$_SESSION["assigned_delay"] = $setdata["assigned_delay"];
+							$_SESSION["assigned_class"] = $setdata["assigned_class"];
 							$_SESSION["access_granted"] = true;
 							//More things will be added soon;
 						}
@@ -294,6 +295,36 @@ if(isset($_POST['goToLogin']))
 					<p>Statistici:</p>
 					<p>Data inregistrarii: <?php echo $_SESSION['reg_date']; ?></p>
 					<p>Ultima logare: <?php echo $_SESSION['log_date']; ?></p>
+					<p>Delay: <?php
+					if(!empty($_SESSION['assigned_delay']))
+					{
+						$sec = $_SESSION['assigned_delay']/1000;
+						if($sec == 0 || ($sec > 1 && $sec < 20))
+						{	
+							echo $sec.' secunde';
+						}
+						elseif($sec == 1)
+						{
+							echo 'o secunda';
+						}
+						else
+						{
+							echo $sec.' de secunde';
+						}
+					}
+					else
+					{
+						echo (10000/1000)." secunde";
+					}
+					?></p>
+					<?php
+					if(!empty($_SESSION['assigned_class']))
+					{
+					?>
+					<p>Clasa curenta: <?php echo $_SESSION['assigned_class']; ?></p>
+					<?php
+					}
+					?>
 					<br>
 					<?php
 					if(!$_SESSION["request_scan"])
@@ -323,13 +354,13 @@ if(isset($_POST['goToLogin']))
 							function platform(){
 							$("#platform").load("live.php");
 							}
-							setInterval(function(){platform()}, 5000);
+							setInterval(function(){platform()}, <?php if(!empty($_SESSION['assigned_delay'])) { echo $_SESSION['assigned_delay']; } else { echo 10000; } ?>);
 							</script>
 							<div style="display: none;" id="controale">
 								<form method="POST" action="./">
 									<div class="col-sm-12"></div>
 									<div class="col-sm-4"></div>
-									<div class="col-sm-4"><input id="scanClass" name="class" style="text-align: center;" maxlength="7" type="text" class="input-sm form-control" placeholder="123.123"></div>
+									<div class="col-sm-4"><input id="scanClass" name="class" style="text-align: center;" maxlength="7" type="text" class="input-sm form-control" <?php if(!empty($_SESSION['assigned_class'])) { echo 'value="'.$_SESSION['assigned_class'].'"'; } ?> placeholder="123.123"></div>
 									<div class="col-sm-4"></div>
 									<div class="col-sm-12"><br>
 										<div class="btn-group">
