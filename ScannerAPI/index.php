@@ -45,7 +45,7 @@ function getVuln()
 			</tr>
 			<?php
 			$filename = "/var/www/html/confidential/BSSH2/vuln.txt";
-			$pattern = "/(?P<type>.*) \-\> (?P<username>\w+) (?P<password>.+) (?P<ip>.{7,15}) (?P<port>\d{1,5})/";
+			$pattern = "/(?P<type>[^\r]*) \-\> (?P<username>\w+) (?P<password>.+) (?P<ip>.{7,15}) (?P<port>\d{1,5})/";
 			
 			$file = fopen($filename, "r");
 			$raw = fread($file, filesize($filename));
